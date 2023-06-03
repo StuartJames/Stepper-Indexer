@@ -1,0 +1,84 @@
+menu "Stepper Indexer configuration"
+       
+menu "Indexer Interface"
+
+	config INX_STEP_PIN
+		int "Stepper clock"
+		default 19
+		range 0 30
+		help
+		Clock pin, provides the step clock to the motor driver.
+
+	config INX_DIR_PIN
+		int "Stepper direction pin"
+		default 23
+		range 0 30
+		help
+		Direction pin, controls the direction of spin.
+
+	config INX_ENABLE_PIN
+		int "Stepper driver Enable pin"
+		default 18
+		range 0 30
+		help
+		Enable pin, enables the driver outputs to the motor.
+
+endmenu
+
+menu "UART Interface"
+	config UART_NUM
+		int "UART number"
+		default 2
+		range 0 2
+		help
+		UART number.
+		
+	config UART_TXD_PIN
+		int "UART Tx pin"
+		default 4
+		range 0 30
+		help
+		UART Tx pin, transmitting data.
+
+	config UART_RXD_PIN
+		int "UART Rx pin"
+		default 5
+		range 0 30
+		help
+		UART Rx pin, receiving data.
+
+	config UART_BAUDRATE
+		int "Baud rate"
+		default 115200
+		help
+		UART baudrate speed.
+
+endmenu
+
+menu "Display Interface"
+
+	config OLED_CLOCK
+		int "I2C clock pin to OLED Display"
+		default 15
+		range 0 30
+		help
+		I2C clock pin, connected to display.
+
+	config OLED_DATA
+		int "I2C data pin to OLED Display"
+		default 4
+		range 0 30
+		help
+		I2C data pin, connected to display.
+
+	config OLED_RESET
+		int "Reset pin to OLED Display"
+		default 16
+		range 0 30
+		help
+		Reset pin, connected to display.
+
+endmenu
+
+endmenu
+
