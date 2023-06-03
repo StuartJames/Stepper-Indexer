@@ -35,6 +35,7 @@ Required Hardware
 Note
 
 I use a tab size of 2 for all source code. Using anything else may look weird.
+
 Support
 
 Problems can be reported using the issues tab in github.
