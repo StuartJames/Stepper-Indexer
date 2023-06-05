@@ -9,6 +9,8 @@ ESP32 Stepper Indexer for a ESP32 WiFi Heltec board
 
 :Description: Stepper motor indexer to produce Step, Direction and Enable signals to a driver module. Note that this code generates only Enable/Step & Direction signals, it does not generate phased coil signals.
 
+The project is based arrond an article by David Austin for a stepper motor speed profile generator using an 8bit microcontroller. I have not bothered to change the code to suit a 32bit system as it seems to work reasonably well as is.
+
 Key Features
 
     Written using the Eclipse IDE and the ESP IDF framework including FreeRTOS:

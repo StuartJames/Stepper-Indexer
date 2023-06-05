@@ -115,6 +115,8 @@ gpio_config_t io_conf;
   io_conf.mode = GPIO_MODE_OUTPUT;
   gpio_config(&io_conf);
 
+  gpio_set_level(STEP_MOTOR_GPIO_EN, MOTOR_DISABLE);                                        // make sure drive is disabled. some drives place full current through coils when enabled
+
   io_conf.intr_type = GPIO_INTR_DISABLE;                                                    // no interrupts
   io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;                                                // bit mask of the pins, use GPIO14/27 here
   io_conf.mode = GPIO_MODE_INPUT;                                                           // set as input mode
