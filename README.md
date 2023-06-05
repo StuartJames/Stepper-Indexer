@@ -7,7 +7,8 @@ ESP32 Stepper Indexer for a ESP32 WiFi Heltec board
 
 :Maintainer: sjames@hydrasystems.com
 
-:Description: Stepper motor indexer to produce Step, Direction and Enable signals to a driver module.
+:Description: Stepper motor indexer to produce Step, Direction and Enable signals to a driver module. Note that this code generates only Enable/Step & Direction signals, it does not generate phased coil signals.
+
 Key Features
 
     Written using the Eclipse IDE and the ESP IDF framework including FreeRTOS:
