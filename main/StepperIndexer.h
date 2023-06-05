@@ -131,7 +131,7 @@ extern "C" {
 #define CNTRL_IO2_BIT             0x40
 #define CNTRL_IO3_BIT             0x80
 
-#define SPP_MESSAGE_SIZE          132
+#define UART_TX_MSG_SIZE          132
 #define RECV_QUEUE_SIZE           10
 #define SEND_QUEUE_SIZE           10
 #define QUEUE_MAXDELAY            512
@@ -254,9 +254,9 @@ extern uint8_t        m_LatchedSWState;
 
 void FreePtr(void *pPtr);
 
-void DisplayTask(void *arg);
-void IndicatorTask(void *arg);
-void ProcessSPPMessage(void *arg);
+void DisplayTask(void *pArg);
+void IndicatorTask(void *pArg);
+void ProcessSPPMessage(void *pArg);
 
 void ConfigureIndexer(void);
 void BluetoothInit(void);

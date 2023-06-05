@@ -36,7 +36,7 @@ static uint8_t* pTxBuffer;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-static void UART_Tx(void *arg)
+static void UART_Tx(void *pArg)
 {
 SendObject_t SendObj;
 
@@ -44,8 +44,8 @@ SendObject_t SendObj;
   while(true){
     xQueueReceive(m_UARTSendQueue, &SendObj, portMAX_DELAY);
     if(SendObj.pData != NULL){
-      while(uart_wait_tx_done(UART_Port, 10) != ESP_OK);                                            // wait for out buffer to become free
-      if(uart_write_bytes(UART_Port, SendObj.pData, SendObj.Length) != SendObj.Length){               // send the data to the driver
+      while(uart_wait_tx_done(UART_Port, 10) != ESP_OK);                                    // wait for out buffer to become free
+      if(uart_write_bytes(UART_Port, SendObj.pData, SendObj.Length) != SendObj.Length){     // send the data to the driver
         ESP_LOGI(TAG, "Failed to transmit all data.");
       }
       FreePtr(SendObj.pData);
@@ -55,11 +55,11 @@ SendObject_t SendObj;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-static void UART_Rx(void *arg)
+static void UART_Rx(void *pArg)
 {
 uart_event_t event;
 uint16_t FillCount = 0;
-CmdObject_t RecObj = {.Srce = CD_UART, .pData = NULL, .Length = 0};
+CmdObject_t CmdQueObj = {.Srce = CD_UART, .pData = NULL, .Length = 0};
 
   xEventGroupWaitBits(m_SystemFlags, SYSFLAG_SYSTEM_UP, pdFALSE, pdFALSE, portMAX_DELAY);
   while(true){
@@ -67,21 +67,22 @@ CmdObject_t RecObj = {.Srce = CD_UART, .pData = NULL, .Length = 0};
       switch(event.type) {
         case UART_DATA:{                                                                    // UART receiving data
           uart_read_bytes(UART_Port, &pRxBuffer[FillCount], event.size, portMAX_DELAY);
-          FillCount += ((SPP_MESSAGE_SIZE - FillCount) >= event.size) ? event.size : SPP_MESSAGE_SIZE - FillCount;
+          FillCount += ((UART_TX_MSG_SIZE - FillCount) >= event.size) ? event.size : UART_TX_MSG_SIZE - FillCount;
           if(strchr((char*)pRxBuffer, 10)){
             uint8_t *pCmdBuff = NULL;
-            pCmdBuff = (uint8_t*)malloc(FillCount * sizeof(uint8_t));
+            pCmdBuff = (uint8_t*)malloc((FillCount + 1) * sizeof(uint8_t));                 // allocate buffer memory. this will be freed by ProcessSPPMessage function
             if(pCmdBuff == NULL){
               ESP_LOGE(TAG, "%s malloc failed", __func__);
-              bzero(pRxBuffer, SPP_MESSAGE_SIZE);
+              bzero(pRxBuffer, UART_TX_MSG_SIZE);
               FillCount = 0;
               break;
             }
-            memcpy(pCmdBuff, pRxBuffer, FillCount);
-            RecObj.pData = pCmdBuff;
-            RecObj.Length = FillCount;
-            xQueueSend(m_CmdQueue, &RecObj, 10 / portTICK_PERIOD_MS);
-            bzero(pRxBuffer, SPP_MESSAGE_SIZE);
+            memset(pCmdBuff, 0x0, (FillCount + 1));                                         // make sure it's null terminated
+            memcpy(pCmdBuff, pRxBuffer, FillCount);                                         // copy command to new buffer
+            CmdQueObj.pData = pCmdBuff;
+            CmdQueObj.Length = FillCount;
+            xQueueSend(m_CmdQueue, &CmdQueObj, 10 / portTICK_PERIOD_MS);                    // place in command queue
+            bzero(pRxBuffer, UART_TX_MSG_SIZE);                                             // prepare for next command
             FillCount = 0;
             break;
           }
@@ -129,15 +130,15 @@ esp_err_t UARTInit(gpio_num_t TxPin, gpio_num_t RxPin, int Baud)
   if(gpio_set_direction(RxPin, GPIO_MODE_INPUT)) return ESP_FAIL;
   if(gpio_set_pull_mode(RxPin, GPIO_PULLUP_ONLY)) return ESP_FAIL;
   if(uart_param_config(UART_Port, &UARTConfig)) return ESP_FAIL;                                      //Configure UART1 parameters
-  if(uart_set_pin(UART_Port, TxPin, RxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)) return ESP_FAIL;   //Set UART1 pins(TX, RX, RTS, CTS)
-  if(uart_driver_install(UART_Port, SPP_MESSAGE_SIZE * 2, SPP_MESSAGE_SIZE * 2, 20, &UART0_Queue, 0)) return ESP_FAIL;
+  if(uart_set_pin(UART_Port, TxPin, RxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)) return ESP_FAIL;  //Set UART1 pins(TX, RX, RTS, CTS)
+  if(uart_driver_install(UART_Port, UART_TX_MSG_SIZE * 2, UART_TX_MSG_SIZE * 2, 20, &UART0_Queue, 0)) return ESP_FAIL;
   if(xTaskCreate(UART_Tx, "UART Tx", UART_TASK_STACK_SIZE, NULL, UART_TASK_PRIO, NULL) == 0L) return ESP_FAIL;
   if(xTaskCreate(UART_Rx, "UART Rx", UART_TASK_STACK_SIZE, NULL, UART_TASK_PRIO, NULL) == 0L) return ESP_FAIL;
-  pRxBuffer = (uint8_t*) malloc(SPP_MESSAGE_SIZE);
-  pTxBuffer = (uint8_t*) malloc(SPP_MESSAGE_SIZE);
-  bzero(pRxBuffer, SPP_MESSAGE_SIZE);
-  bzero(pTxBuffer, SPP_MESSAGE_SIZE);
-  xEventGroupSetBits(m_SystemFlags, SYSFLAG_UART_READY);                          // Tell system we're ready
+  pRxBuffer = (uint8_t*) malloc(UART_TX_MSG_SIZE);
+  pTxBuffer = (uint8_t*) malloc(UART_TX_MSG_SIZE);
+  bzero(pRxBuffer, UART_TX_MSG_SIZE);
+  bzero(pTxBuffer, UART_TX_MSG_SIZE);
+  xEventGroupSetBits(m_SystemFlags, SYSFLAG_UART_READY);                                    // Tell system we're ready
   ESP_LOGI(TAG, "UART Comms ready");
   return ESP_OK;
 }

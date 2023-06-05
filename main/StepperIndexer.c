@@ -210,12 +210,12 @@ char *pMsg;
 va_list args;
 QueueHandle_t Queue = 0;
 
-  pMsg = (char*)malloc(SPP_MESSAGE_SIZE * sizeof(char));
+  pMsg = (char*)malloc(UART_TX_MSG_SIZE * sizeof(char));                                    // size applies to GATT as well
   va_start(args, pFmt);
   vsprintf(pMsg, pFmt, args);
   va_end(args);
   SendObject_t SendObj = {.Type = 0, .pData = (uint8_t*)pMsg, .Length = (int)strlen(pMsg)};
-  if(Dest == CD_UART) Queue = m_UARTSendQueue;
+  if(Dest == CD_UART) Queue = m_UARTSendQueue;                                              // reply to the correct interface
   else Queue = m_BTSendQueue;
   if(xQueueSend(Queue, &SendObj, QUEUE_MAXDELAY) != pdTRUE) ESP_LOGW(TAG, "Write to %d queue fail.", Dest);
 }
@@ -236,7 +236,7 @@ int16_t i = 0;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-void ProcessSPPMessage(void *arg)
+void ProcessSPPMessage(void *pArg)
 {
 uint8_t Dest = CD_UART;
 int16_t i, CommandIndex = 0;

@@ -57,7 +57,7 @@ void SleepCallback(TimerHandle_t pxTimer)
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-void IndicatorTask(void *arg)
+void IndicatorTask(void *pArg)
 {
 bool LedInd = false;
 int LedTime = 1, DispTime = 5;
@@ -83,7 +83,7 @@ int LedTime = 1, DispTime = 5;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-void DisplayTask(void *arg)
+void DisplayTask(void *pArg)
 {
   char buff[15];
 TimerHandle_t hSleepTimer;

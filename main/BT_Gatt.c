@@ -199,7 +199,7 @@ uint8_t error = 0xff;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SendTask(void *arg)
+void SendTask(void *pArg)
 {
 SendObject_t SendObj;
 
@@ -268,7 +268,7 @@ static void GattsProfileEventHandler(esp_gatts_cb_event_t event, esp_gatt_if_t g
 {
 esp_ble_gatts_cb_param_t *p_data = (esp_ble_gatts_cb_param_t*)param;
 uint8_t res = 0xff;
-CmdObject_t RecObj = {.Srce = CD_GATT, .pData = NULL, .Length = 0};
+CmdObject_t CmdQueObj = {.Srce = CD_GATT, .pData = NULL, .Length = 0};
 
   ESP_LOGI(BT_TAG, "Profile event:%d", event);
   switch(event){
@@ -306,16 +306,16 @@ CmdObject_t RecObj = {.Srce = CD_GATT, .pData = NULL, .Length = 0};
           case SPP_IDX_DATA_RECV_VAL:{
             ESP_LOGI(BT_TAG, "data receive");
             uint8_t *pCmdBuff = NULL;
-            pCmdBuff = (uint8_t*)malloc((p_data->write.len + 1) * sizeof(uint8_t));
+            pCmdBuff = (uint8_t*)malloc((p_data->write.len + 1) * sizeof(uint8_t));         // allocate buffer memory. this will be freed by ProcessSPPMessage function
             if(pCmdBuff == NULL){
               ESP_LOGE(BT_TAG, "%s malloc failed", __func__);
               break;
             }
-            memset(pCmdBuff, 0x0, (p_data->write.len + 1));
-            memcpy(pCmdBuff, (char *)p_data->write.value, p_data->write.len);
-            RecObj.pData = pCmdBuff;
-            RecObj.Length = p_data->write.len;
-            xQueueSend(m_CmdQueue, &RecObj, 10 / portTICK_PERIOD_MS);
+            memset(pCmdBuff, 0x0, (p_data->write.len + 1));                                 // make sure it's null terminated
+            memcpy(pCmdBuff, (char *)p_data->write.value, p_data->write.len);               // copy command to new buffer
+            CmdQueObj.pData = pCmdBuff;
+            CmdQueObj.Length = p_data->write.len;
+            xQueueSend(m_CmdQueue, &CmdQueObj, 10 / portTICK_PERIOD_MS);
             break;
           }
           default:{       //TODO:
